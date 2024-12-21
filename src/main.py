@@ -1,15 +1,23 @@
-import asyncio
-import signal
-from hypercorn.asyncio import serve
-from hypercorn.config import Config
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api import api
 from contextlib import asynccontextmanager
 from src.settings import settings
+
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
+
+
+engine: AsyncEngine
+async_session_maker: async_sessionmaker
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    global engine, async_session_maker
+    engine = create_async_engine(url=str(settings.pg_url))
+    async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
+
     yield
+    await engine.dispose()
 
 def init_routes(_app: FastAPI):
     app.include_router(api)
