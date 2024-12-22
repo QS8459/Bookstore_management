@@ -10,6 +10,7 @@ class BookService(BaseService):
         super().__init__(session, Books)
 
 
+
 def book_service(session: AsyncSession = Depends(get_async_session)) -> AsyncSession:
 
     return BookService(session)
