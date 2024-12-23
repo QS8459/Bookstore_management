@@ -9,6 +9,7 @@ from datetime import datetime
 T = TypeVar('T')
 
 class BaseService(ABC, Generic[T]):
+
     def __init__(self, session: AsyncSession, model: Type[T]):
         self.session = session
         self.model = model
@@ -27,6 +28,8 @@ class BaseService(ABC, Generic[T]):
             except SQLAlchemyError as e:
                 await self.session.rollback()
                 raise RuntimeError("Database operation failed") from e
+
+
     async def _execute_read(self, query):
         async with self.session:
             try:
@@ -35,9 +38,13 @@ class BaseService(ABC, Generic[T]):
             except SQLAlchemyError as e:
                 await self.session.rollback()
                 raise RuntimeError('Database operation failed') from e
+
+
     @abstractmethod
     def before_add(self, **kwargs):
         pass
+
+
     async def add(self, **kwargs) -> T:
         async def _create_instance(**kwargs):
             instance = self.model(**kwargs)
