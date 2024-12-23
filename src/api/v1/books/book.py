@@ -27,13 +27,14 @@ async def book_detail(
         raise e;
 
 
-# @book_api.patch('/update', status_code = 200, response_model = BookDetailSchema)
-# async def update_book(
-#         book: BookUpdateSchema,
-#         service = Depends(book_service)
-# ):
-#     try:
-#         response = await service.update(**book.dict())
-#         return response
-#     except Exception as e:
-#         raise e
+@book_api.patch('/update/{id}', status_code = 200, response_model = BookDetailSchema)
+async def update_book(
+        id: UUID,
+        book: BookUpdateSchema,
+        service = Depends(book_service)
+):
+    try:
+        response = await service.update(id, **book.dict())
+        return response
+    except Exception as e:
+        raise e

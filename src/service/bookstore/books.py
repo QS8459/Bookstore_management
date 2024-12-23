@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 class BookService(BaseService):
     def __init__(self, session):
         super().__init__(session, Books)
+    def before_add(self, **kwargs):
+        pass
 
 
 

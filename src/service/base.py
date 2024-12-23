@@ -1,10 +1,11 @@
 from typing import TypeVar, Generic, Type
 from uuid import UUID
-from abc import ABC
+from abc import ABC, abstractmethod
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from src.db.models.history.history import History
 from sqlalchemy.future import select
+from datetime import datetime
 T = TypeVar('T')
 
 class BaseService(ABC, Generic[T]):
@@ -15,10 +16,10 @@ class BaseService(ABC, Generic[T]):
     async def _execute_in_session(self, callback, operation_type: str, *args, **kwargs):
         async with self.session:
             try:
-                if operation_type == "write":
+                if operation_type in ["write", "update"]:
                     result = await callback(*args, **kwargs)
                     await self.session.commit()
-                    if result:
+                    if result and operation_type != "update":
                         await self.session.refresh(result)
                     return result
                 elif operation_type == 'read':
@@ -33,9 +34,13 @@ class BaseService(ABC, Generic[T]):
                 await self.session.rollback()
                 raise RuntimeError("Database operation failed") from e
 
+    @abstractmethod
+    async def before_add(self, **kwargs):
+        pass
     async def add(self, **kwargs) -> T:
         async def _create_instance(**kwargs):
             instance = self.model(**kwargs)
+            await self.before_add(**kwargs)
             self.session.add(instance)
             return instance
 
@@ -44,6 +49,7 @@ class BaseService(ABC, Generic[T]):
         await self.add_history(md = History, model = self.model.__tablename__, action = "create", fields = field)
 
         return instance
+
 
     async def add_history(self, md: Type[T] , **kwargs):
         async def _create_instance(**kwargs):
@@ -61,25 +67,25 @@ class BaseService(ABC, Generic[T]):
     async def get_by_id(self, id:UUID) -> T:
         query = self._get_query_by_id(id)
         instance = await self._execute_in_session(lambda:query,"read")
-
         return instance
 
     async def update(self, id: UUID, **kwargs) -> T:
         async def _update_instance(**kwargs):
-            instance = self.model(**kwargs)
-            self.session.update()
+            instance = await self.get_by_id(id)
+            for k,v in kwargs.items():
+                setattr(instance, k,v)
             return instance
 
-        instance = await self._execute_in_session(_update_instance, **kwargs)
+        instance = await self._execute_in_session(_update_instance, "update",**kwargs)
+        fields = BaseService.formatize(**kwargs)
+        await self.add_history(History,model = self.model.__tablename__, action = "update", fields = fields)
         return instance
 
     @staticmethod
+    def datetime_converter(o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+    @staticmethod
     def formatize(**kwargs):
-        field_string: str = '{'
-        for k, v in kwargs.items():
-            field_string += f"\"{k}\": \"{v}\","
-        field_string += "}"
-        field_arr = [i for i in field_string]
-        field_arr.pop(-2)
-        result_string = ''.join(field_arr)
-        return result_string
+        import json
+        return json.dumps(kwargs, default=BaseService.datetime_converter)

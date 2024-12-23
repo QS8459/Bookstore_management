@@ -6,7 +6,7 @@ class BookBaseSchema(BaseModel):
     year_published: Optional[datetime] =None
 
 class BookUpdateSchema(BookBaseSchema):
-    id: UUID4
+    pass
 class BookDetailSchema(BookBaseSchema):
     year_published: Optional[datetime] = None
     author: object
