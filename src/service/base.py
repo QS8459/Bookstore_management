@@ -14,12 +14,12 @@ class BaseService(ABC, Generic[T]):
         self.session = session
         self.model = model
 
-    async def _execute_in_session(self, callback, *args, **kwargs):
+    async def _execute_in_session(self, callback, refresh = False,*args, **kwargs):
         async with self.session:
             try:
                 result = await callback(*args, **kwargs)
                 await self.session.commit()
-                if result:
+                if result and refresh:
                     await self.session.refresh(result)
                 return result
             except IntegrityError as e:
@@ -52,7 +52,7 @@ class BaseService(ABC, Generic[T]):
             self.session.add(instance)
             return instance
 
-        instance = await self._execute_in_session(_create_instance, **kwargs)
+        instance = await self._execute_in_session(_create_instance, refresh = True, **kwargs)
         field = BaseService.formatize(**kwargs)
         await self.add_history(action = "create", fields = field)
 
@@ -78,13 +78,14 @@ class BaseService(ABC, Generic[T]):
         return await self._execute_read(query)
 
     async def update(self, id: UUID, **kwargs) -> T:
-        async def _update_instance(**kwargs):
+        async def _update_instance(id,**kwargs):
             instance = await self.get_by_id(id)
             for k,v in kwargs.items():
                 setattr(instance, k,v)
+            self.session.add(instance)
             return instance
 
-        instance = await self._execute_in_session(_update_instance,**kwargs)
+        instance = await self._execute_in_session(_update_instance,id=id,**kwargs)
         fields = BaseService.formatize(**kwargs)
         await self.add_history(action = "update", fields = fields)
         return instance

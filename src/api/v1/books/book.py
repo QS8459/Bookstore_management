@@ -6,11 +6,11 @@ book_api = APIRouter(prefix = '/book')
 
 @book_api.post('/add', status_code = 201, response_model = BookDetailSchema)
 async def add_book(
-        books: BookBaseSchema,
+        book: BookBaseSchema,
         service = Depends(book_service)
 ):
     try:
-        a = await service.add(**books.dict())
+        a = await service.add(**book.dict())
         return a
     except Exception as e:
         raise e
@@ -34,7 +34,7 @@ async def update_book(
         service = Depends(book_service)
 ):
     try:
-        response = await service.update(id, **book.dict())
+        response = await service.update(id, **book.dict(exclude_unset=True))
         return response
     except Exception as e:
         raise e

@@ -1,9 +1,9 @@
-from pydantic import BaseModel, UUID4, AwareDatetime
+from pydantic import BaseModel, UUID4
 from datetime import datetime
 from typing import Optional
 class BookBaseSchema(BaseModel):
-    title: str
-    year_published: Optional[datetime] =None
+    title: Optional[str] = None
+    year_published: Optional[datetime] = None
 
 class BookUpdateSchema(BookBaseSchema):
     pass
