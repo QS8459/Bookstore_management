@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from src.db.models.history.history import History
 from sqlalchemy.future import select
-from datetime import datetime
+from typing import Optional
 T = TypeVar('T')
 
 class BaseService(ABC, Generic[T]):
@@ -75,7 +75,10 @@ class BaseService(ABC, Generic[T]):
 
     async def get_by_id(self, id:UUID) -> T:
         query = select(self.model).where(self.model.id == id)
-        return await self._execute_read(query)
+        instance =  await self._execute_read(query)
+        if not instance:
+            return None
+        return instance
 
     async def update(self, id: UUID, **kwargs) -> T:
         async def _update_instance(id,**kwargs):
@@ -90,6 +93,27 @@ class BaseService(ABC, Generic[T]):
         await self.add_history(action = "update", fields = fields)
         return instance
 
+    async def soft_delete(self, id:UUID)-> Optional[dict]:
+        async def _delete_softly(id:UUID):
+            instance = await self.get_by_id(id = id)
+            setattr(instance, 'is_active', False)
+            self.session.add(instance)
+            return instance
+
+        await self._execute_in_session(_delete_softly, refresh = True,id= id)
+        return {"detail":"Deleted Successfully"}
+
+    async def hard_delete(self, id:UUID):
+        async def _delete_hard(id:UUID):
+            instance = await self.get_by_id(id = id)
+            await self.session.delete(instance)
+            return instance
+
+        await self._execute_in_session(_delete_hard, id = id)
+        check_var = await self.get_by_id(id)
+        if check_var is None:
+            return "Success"
+        return "Error"
     @staticmethod
     def formatize(**kwargs):
         import json
