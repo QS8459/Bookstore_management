@@ -6,7 +6,7 @@ from src.api import api
 from contextlib import asynccontextmanager
 from src.settings import settings
 from src.configuration import engine
-
+from src.logfunc import logger
 
 
 
@@ -59,3 +59,22 @@ async def validation_error_handler(request: Request, exc):
             "message": f"{exc.body}, something went wrong"
         }
     )
+
+
+@app.middleware("http")
+async def log_exception(request: Request, call_next):
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        # Log the exception here
+        logger.error(f"Exception occurred: at {request.url.path}: {str(e)}")
+        # Return a custom error response
+        return JSONResponse(
+            content={"detail": "An internal error occurred."},
+            status_code=500,
+        )
+    return response
+
+@app.get('/test')
+async def test_endpoint():
+    raise ValueError("Simulated Error")
