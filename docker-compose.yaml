@@ -1,17 +1,39 @@
 services:
+  library_backend:
+    container_name: library_backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      BK_POSTGRES_USER: fastapi
+      BK_POSTGRES_DB: bookstore
+      BK_POSTGRES_PASSWORD: fastapi_admin
+      BK_POSTGRES_PORT: 5432
+      BK_POSTGRES_HOST: bookstore_db
+      BK_APP_TITLE: Library_Management
+      BK_APP_DESCRIPTION: Application_for_bookstore_management
+      BK_APP_VERSION: 0.0.1
+#      BK_PG_URL: postgresql+asyncpg://fastapi:fastapi_admin@bookstore_db:5432/bookstore
+    ports:
+      - "8000:8000"
+    expose:
+      - 8000
+    entrypoint: ["hypercorn", "src.main:app","--bind", "0.0.0.0:8000"]
+    volumes:
+      - .:/app
 
   postgres:
-    container_name: booksotre_db
+    container_name: bookstore_db
     image: postgres:latest
     ports:
-      - "5431:5432"
+      - "5432:5432"
     expose:
-      - 5431
+      - 5432
     environment:
-      - POSTGRES_USER=fastapi
-      - POSTGRES_DB=bookstore
-      - POSTGRES_PASSWORD=fastapi_admin
-      - POSTGRES_PORT=5432
+      POSTGRES_USER: fastapi
+      POSTGRES_DB: bookstore
+      POSTGRES_PASSWORD: fastapi_admin
+      POSTGRES_PORT: 5432
     volumes:
       - postgresvolume:/var/lib/postgres/data
 

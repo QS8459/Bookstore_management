@@ -7,9 +7,10 @@ class Settings(BaseSettings):
     pg_url: PostgresDsn
 
     class Config:
-        env_file = '.env'
+        env_file = None
         env_file_encoding = "utf-8"
         extra = Extra.allow
+        env_prefix = "BK_"
 
 
 settings = Settings()
