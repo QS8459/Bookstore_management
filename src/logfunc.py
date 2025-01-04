@@ -11,11 +11,11 @@ logger = logging.getLogger("Library_Logger")
 logger.setLevel(logging.ERROR)
 
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.ERROR)
+console_handler.setLevel(logging.DEBUG)
 console_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
 csv_handler = RotatingFileHandler(LOG_CSV_FILE, maxBytes = 1024 * 1024, backupCount = 3)
-csv_handler.setLevel(logging.ERROR)
+csv_handler.setLevel(logging.DEBUG)
 csv_handler.setFormatter(logging.Formatter("%(asctime)s.%(levelname)s,%(message)s"))
 
 class SQLiteHandler(logging.Handler):
@@ -50,7 +50,7 @@ class SQLiteHandler(logging.Handler):
 
 
 sqlite_handler = SQLiteHandler(LOG_DB_FILE)
-sqlite_handler.setLevel(logging.ERROR)
+sqlite_handler.setLevel(logging.DEBUG)
 sqlite_handler.setFormatter(logging.Formatter("%(asctime)s, %(levelname)s, %(message)s"))
 logger.addHandler(console_handler)
 logger.addHandler(sqlite_handler)

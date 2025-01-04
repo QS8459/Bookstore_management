@@ -13,7 +13,6 @@ services:
       BK_APP_TITLE: Library_Management
       BK_APP_DESCRIPTION: Application_for_bookstore_management
       BK_APP_VERSION: 0.0.1
-#      BK_PG_URL: postgresql+asyncpg://fastapi:fastapi_admin@bookstore_db:5432/bookstore
     ports:
       - "8000:8000"
     expose:
@@ -24,7 +23,9 @@ services:
 
   postgres:
     container_name: bookstore_db
-    image: postgres:latest
+    build:
+      context: ./postgres_alpine
+      dockerfile: Dockerfile
     ports:
       - "5432:5432"
     expose:

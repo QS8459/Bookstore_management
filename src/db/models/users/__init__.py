@@ -1,0 +1,1 @@
+from src.db.models.users.anonym_users import anonymous_user

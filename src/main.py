@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from starlette.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import HTTPException, ResponseValidationError
@@ -64,8 +64,9 @@ async def validation_error_handler(request: Request, exc):
 @app.middleware("http")
 async def log_exception(request: Request, call_next):
     try:
+        logger.info(f"{request.method}: at {request.url.path}")
         response = await call_next(request)
-    except Exception as e:
+    except HTTPException as e:
         # Log the exception here
         logger.error(f"Exception occurred: at {request.url.path}: {str(e)}")
         # Return a custom error response
@@ -78,3 +79,8 @@ async def log_exception(request: Request, call_next):
 @app.get('/test')
 async def test_endpoint():
     raise ValueError("Simulated Error")
+
+@app.get('/cookie')
+async def cookie(response: Response):
+    response.set_cookie(key = "fakecookie", value = "fake-cookie-value-sesion")
+    return {"message":"Come to the dark side"}
