@@ -8,7 +8,7 @@ LOG_CSV_FILE = "error_logs.csv"
 LOG_DB_FILE = "error_logs.db"
 
 logger = logging.getLogger("Library_Logger")
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.DEBUG)
 
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)

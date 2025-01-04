@@ -3,8 +3,6 @@ from src.schema.books.book import BookBaseSchema, BookDetailSchema, BookUpdateSc
 from src.service.bookstore.books import book_service
 from uuid import UUID
 from functools import wraps
-from typing import Optional, Tuple
-
 
 # def custom_exception_handler(func):
 #     @wraps(func)
