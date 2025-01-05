@@ -8,8 +8,7 @@ from src.settings import settings
 from src.configuration import engine
 from src.logfunc import logger
 
-
-
+from src.middlewares import (ip_cookie, log_exception)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -26,7 +25,6 @@ app = FastAPI(
     lifespan = lifespan,
 )
 
-app.include_router(api)
 
 app.add_middleware(
     CORSMiddleware,
@@ -60,27 +58,10 @@ async def validation_error_handler(request: Request, exc):
         }
     )
 
-
-@app.middleware("http")
-async def log_exception(request: Request, call_next):
-    try:
-        logger.info(f"{request.method}: at {request.url.path}")
-        response = await call_next(request)
-    except HTTPException as e:
-        # Log the exception here
-        logger.error(f"Exception occurred: at {request.url.path}: {str(e)}")
-        # Return a custom error response
-        return JSONResponse(
-            content={"detail": "An internal error occurred."},
-            status_code=500,
-        )
-    return response
-
+app.middleware('http')(log_exception)
+app.middleware('http')(ip_cookie)
 @app.get('/test')
 async def test_endpoint():
     raise ValueError("Simulated Error")
 
-@app.get('/cookie')
-async def cookie(response: Response):
-    response.set_cookie(key = "fakecookie", value = "fake-cookie-value-sesion")
-    return {"message":"Come to the dark side"}
+app.include_router(api)

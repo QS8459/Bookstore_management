@@ -36,5 +36,6 @@ class UsersService(BaseService):
         except Exception as e:
             logger.error(f'{e}')
 
+
 def users_service(session:AsyncSession = Depends(get_async_session)) -> AsyncSession:
     return UsersService(session)
