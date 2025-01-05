@@ -1,6 +1,8 @@
-from fastapi import Request, Response
+from fastapi import Request, Response, HTTPException
+from starlette.responses import JSONResponse
 from time import perf_counter
 from src.logfunc import logger
+from src.db.models.users.cookie import Cookie
 
 async def ip_cookie(request: Request, call_next):
     start_time = perf_counter()

@@ -114,6 +114,42 @@ class BaseService(ABC, Generic[T]):
         if check_var is None:
             return "Success"
         return "Error"
+
+    async def filter(self, fields = None, **kwargs):
+        """
+        Filter records with dynamic criteria and select specific columns.
+
+        Args:
+            fields (list): List of fields to retrieve. If None, retrieves all columns.
+                           Example: fields=["id", "name"]
+            kwargs: Key-value pairs for filtering.
+                    Example: filter(name="Alice", age=30)
+
+        Returns:
+            List of filtered results (as dictionaries if fields are specified) or None in case of error.
+        """
+        query = select(self.model)
+
+        if fields:
+            selected_fields = [getattr(self.model, field) for field in fields if hasattr(self.model, field)]
+            if not selected_fields:
+                raise AttributeError("No valid fields specified for selection.")
+            query = select(*selected_fields)
+
+
+        for field, value in kwargs.items():
+            if hasattr(self.model, field):
+                query = query.where(getattr(self.model, field) == value)
+            else:
+                raise AttributeError(f"Field '{field}' does not exist in model '{self.model.__name__}'.")
+
+        response = await self._execute_read(query)
+
+        if not response:
+            return None
+        return response
+
+
     @staticmethod
     def formatize(**kwargs):
         import json
