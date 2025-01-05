@@ -12,19 +12,19 @@ async def visit(
     service = Depends(users_service),
     service_co = Depends(cookie_service)
 ):
-    #Front end needs to send "Authorization" in headers so backend would be able to distingush them
+    # Front end needs to send "Authorization" in headers so backend would be able to distingush them
     check_ip = await service.filter(ip_address = f"{request.client.host}")
     logger.info(f"Check ip value: {check_ip}")
     if check_ip is None:
 
         user = await service.add(ip_address = f"{request.client.host}")
-        #id, cookie_id if you want you may also give expiration_delta in days
+        # id, cookie_id if you want you may also give expiration_delta in days
         user_info = UserSchema(id = str(user.id), ip_address = user.ip_address)
 
         encoded_cookie = service.encode_cookie(**user_info.dict())
 
-        #Service, cookie encoder
-        encoded_response = await service_co.add(value = encoded_cookie, refresh_value = '' )
+        # Service, cookie encoder
+        encoded_response = await service_co.add(value = encoded_cookie, refresh_value = '')
 
         user_updated = await service.update(id = user.id,cookie_id = encoded_response.id)
 

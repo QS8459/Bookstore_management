@@ -8,7 +8,7 @@ from src.settings import settings
 from src.configuration import engine
 from src.logfunc import logger
 
-from src.middlewares import (ip_cookie, log_exception)
+from src.middlewares import (ip_cookie, log_exception, Cookie_checker)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -25,15 +25,15 @@ app = FastAPI(
     lifespan = lifespan,
 )
 
-
+exclude_routes_1 = ['/api/v1/user/visit']
 app.add_middleware(
     CORSMiddleware,
     allow_origins = ['*'],
     allow_credentials = True,
     allow_methods = ['*'],
-    allow_headers = ['*']
+    allow_headers = ['*'],
 )
-
+app.add_middleware(Cookie_checker, exclude_routes_1)
 
 @app.on_event("shutdown")
 async def shutdown():
